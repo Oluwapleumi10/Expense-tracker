@@ -1,0 +1,6 @@
+Date,Item,Amount,Type,Week,Month,Day
+2026-02-11,allowance,25000.0,Income,2026-02-09/2026-02-15,2026-02,Wednesday
+2026-02-11,food,900.0,Expense,2026-02-09/2026-02-15,2026-02,Wednesday
+2026-02-11,data,1500.0,Expense,2026-02-09/2026-02-15,2026-02,Wednesday
+2026-02-09,data,400.0,Expense,2026-02-09/2026-02-15,2026-02,Monday
+2026-02-16,food,700.0,Expense,,,
