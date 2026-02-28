@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import time
 import layout
 import string
+import os
 
 
 
@@ -14,7 +15,8 @@ if "reg_counter" not in st.session_state:
     st.session_state.reg_counter = 0
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
-   user_db = pd.read_csv("users.csv")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+   user_db = pd.read_csv(os.path.join(BASE_DIR,"users.csv")
    with tabs1:
        username = st.text_input("Username",key="Username")
        password = st.text_input("Password",key="Password",type="password")
@@ -159,6 +161,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
