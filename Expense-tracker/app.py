@@ -15,7 +15,7 @@ if "reg_counter" not in st.session_state:
     st.session_state.reg_counter = 0
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+   BASE_DIR = os.path.dirname(os.path.abspath(__file__))
    user_db = pd.read_csv(os.path.join(BASE_DIR,"users.csv")
    with tabs1:
        username = st.text_input("Username",key="Username")
@@ -161,6 +161,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
