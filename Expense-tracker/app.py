@@ -15,7 +15,7 @@ if "reg_counter" not in st.session_state:
     st.session_state.reg_counter = 0
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
-  user_db = st.secrets["Users"]
+   user_db = st.secrets["Users"]
    with tabs1:
        username = st.text_input("Username",key="Username")
        password = st.text_input("Password",key="Password",type="password")
@@ -157,6 +157,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
