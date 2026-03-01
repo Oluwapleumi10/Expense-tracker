@@ -20,7 +20,7 @@ if not st.session_state.username:
        username = st.text_input("Username",key="Username")
        password = st.text_input("Password",key="Password",type="password")
        if st.button("Login"):
-           if  username in user_db and user_db["Username"] == password:
+           if  username in user_db and user_db[username] == password:
               st.session_state.username = username
               st.rerun()
            else:
@@ -157,6 +157,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
