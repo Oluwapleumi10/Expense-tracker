@@ -15,13 +15,12 @@ if "reg_counter" not in st.session_state:
     st.session_state.reg_counter = 0
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
-   BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-   user_db = pd.read_csv(os.path.join(BASE_DIR,"users.csv"))
+  user_db = st.secrets["Users"]
    with tabs1:
        username = st.text_input("Username",key="Username")
        password = st.text_input("Password",key="Password",type="password")
        if st.button("Login"):
-           if  not user_db[(user_db["Username"]==username) & (user_db["Password"]==password)].empty:
+           if  username in user_db and user_db["username"] == password:
               st.session_state.username = username
               st.rerun()
            else:
@@ -35,12 +34,9 @@ if not st.session_state.username:
                time.sleep(2.5)
                st.rerun()
            else:
-            if not user_db[user_db["Username"]==new_username].empty:
+            if new_username  in user_db:
                 st.error("Username already taken")
-            else:    
-                    user_data =  pd.DataFrame({"Username" : [new_username],
-                                        "Password" : [new_password]})
-                    user_data.to_csv("users.csv",mode="a",index=False,header=False)
+            else: 
                     st.success("Account successfully created , go to login page")
                     time.sleep(1.5)
                     st.session_state.reg_counter += 1
@@ -161,6 +157,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
