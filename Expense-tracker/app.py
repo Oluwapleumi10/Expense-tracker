@@ -17,7 +17,7 @@ if "reg_counter" not in st.session_state:
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
    conn = st.connection("gsheets")
-   Users = conn.read(spreadsheet = st.secrets["g_sheets"],worksheet = "Users")
+   Users = conn.read(worksheet = "Users")
     
    
    with tabs1:
@@ -44,7 +44,7 @@ if not st.session_state.username:
                 new_data = pd.DataFrame([{"Username" : new_username,
                               "Password" : new_password}])
                 updated_users = pd.concat([Users,new_data] , ignore_index = True)
-                conn.update(spreadsheet=st.secrets["g_sheets"] , worksheet="Users" , data=updated_users)
+                conn.update(worksheet="Users" , data=updated_users)
                 st.success("Account successfully created , go to login page")
                 time.sleep(1.5)
                 st.session_state.reg_counter += 1
@@ -165,6 +165,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
