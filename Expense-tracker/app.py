@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+from streamlit_gsheets import GSheetsConnection
 import time
 import layout
 import string
@@ -15,12 +16,15 @@ if "reg_counter" not in st.session_state:
     st.session_state.reg_counter = 0
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
-   user_db = st.secrets["users"]
+   conn = st.connection(type="gsheets")
+   Users = conn.read(spreadsheet = st.secrets["g_sheets"],worksheet = "Users")
+    
+   
    with tabs1:
        username = st.text_input("Username",key="Username")
        password = st.text_input("Password",key="Password",type="password")
        if st.button("Login"):
-           if  username in user_db and user_db[username] == password:
+           if  not Users[(Users["Username"] == username) & (Users["Password"] == password)].empty:
               st.session_state.username = username
               st.rerun()
            else:
@@ -34,13 +38,17 @@ if not st.session_state.username:
                time.sleep(2.5)
                st.rerun()
            else:
-            if new_username  in user_db:
+            if not Users[Users["Username"] == new_username].empty:
                 st.error("Username already taken")
-            else: 
-                    st.success("Account successfully created , go to login page")
-                    time.sleep(1.5)
-                    st.session_state.reg_counter += 1
-                    st.rerun()
+            else:
+                new_data = pd.DataFrame([{"Username" : new_username,
+                              "Password" : new_password}])
+                 updated_users = pd.concat([Users,new_data] , ignore_index = True)
+                conn.update(spreadsheet=st.secrets["g_sheets"] , worksheet="Users" , data=updated_users)
+                st.success("Account successfully created , go to login page")
+                time.sleep(1.5)
+                st.session_state.reg_counter += 1
+                st.rerun()
    st.stop()
 
 layout.show_sidebar()
@@ -157,6 +165,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
