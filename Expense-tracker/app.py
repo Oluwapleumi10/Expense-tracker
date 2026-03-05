@@ -16,7 +16,7 @@ if "reg_counter" not in st.session_state:
     st.session_state.reg_counter = 0
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
-   conn = st.connection(type="gsheets")
+   conn = st.connection("gsheets")
    Users = conn.read(spreadsheet = st.secrets["g_sheets"],worksheet = "Users")
     
    
@@ -165,6 +165,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
