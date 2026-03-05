@@ -43,7 +43,7 @@ if not st.session_state.username:
             else:
                 new_data = pd.DataFrame([{"Username" : new_username,
                               "Password" : new_password}])
-                 updated_users = pd.concat([Users,new_data] , ignore_index = True)
+                updated_users = pd.concat([Users,new_data] , ignore_index = True)
                 conn.update(spreadsheet=st.secrets["g_sheets"] , worksheet="Users" , data=updated_users)
                 st.success("Account successfully created , go to login page")
                 time.sleep(1.5)
@@ -165,6 +165,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
