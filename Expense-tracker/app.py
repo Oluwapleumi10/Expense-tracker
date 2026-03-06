@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from streamlit_gsheets import GSheetsConnection
+from supabase import create_client
 import time
 import layout
 import string
@@ -16,9 +16,8 @@ if "reg_counter" not in st.session_state:
     st.session_state.reg_counter = 0
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
-   conn = st.connection("gsheets")
-   Users = conn.read(worksheet = "Users")
-    
+   supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"])
+   Users = supabase.table("Users").select("*").execute().data
    
    with tabs1:
        username = st.text_input("Username",key="Username")
@@ -165,6 +164,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
