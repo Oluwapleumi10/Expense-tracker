@@ -53,8 +53,7 @@ s_username = st.session_state.username
 try:
     file_df = supabase.table("Transactions").select("*").eq("Username" ,s_username) .execute().data
 except:
-    file_df = 
-      {"Date" : [],
+    file_df =  {"Date" : [],
          "Item" : [],
          "Amount" : [],
          "Type" : [],
@@ -161,6 +160,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
