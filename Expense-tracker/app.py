@@ -74,8 +74,7 @@ balance = (total_income+initial) - total_expense
 st.metric(label="Balance" ,value=f"₦ {balance:,.2f}", delta="balance",delta_arrow="off")
 
 def add_transaction(dates,items,amounts,typess):
-    new_entry = 
-        {"Date" : str(dates),
+    new_entry = {"Date" : str(dates),
          "Item" : items,
          "Amount" : amounts,
          "Type" : typess,
@@ -160,6 +159,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
