@@ -10,16 +10,15 @@ import os
 
 
 st.title("Expense Tracker")
+supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"])   
 if "username" not in st.session_state:
     st.session_state.username = {}
 if "reg_counter" not in st.session_state:
     st.session_state.reg_counter = 0
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
-   supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"])
-   users = supabase.table("Users").select("*").execute().data
-   
    with tabs1:
+       users = supabase.table("Users").select("*").execute().data
        username = st.text_input("Username",key="Username")
        password = st.text_input("Password",key="Password",type="password")
        if st.button("Login"):
@@ -50,16 +49,17 @@ if not st.session_state.username:
 layout.show_sidebar()
         
     
-
+s_username = st.session_state.username
 try:
-    file_df = pd.read_csv(f"{st.session_state.username}_expense.csv")
+    file_df = supabase.table("Transactions").select("*").eq("Username" ,s_username) .execute().data
 except:
-    file_df = pd.DataFrame(
+    file_df = 
       {"Date" : [],
          "Item" : [],
          "Amount" : [],
-         "Type" : [] }  
-    )
+         "Type" : [],
+          "Username" : []}  
+file_df = pd.DataFrame(file_df)
 
 if "df" not in st.session_state:
     df = file_df
@@ -75,13 +75,14 @@ balance = (total_income+initial) - total_expense
 st.metric(label="Balance" ,value=f"₦ {balance:,.2f}", delta="balance",delta_arrow="off")
 
 def add_transaction(dates,items,amounts,typess):
-    new_entry = pd.DataFrame(
-        {"Date" : [dates],
-         "Item" : [items],
-         "Amount" : [amounts],
-         "Type" : [typess] } )
-    st.session_state.df = pd.concat([st.session_state.df,new_entry] , ignore_index=True)
-    return  st.session_state.df
+    new_entry = 
+        {"Date" : str(dates),
+         "Item" : items,
+         "Amount" : amounts,
+         "Type" : typess,
+         "Username" : s_username,} 
+    supabase.table("Transactions").insert(new_entry).execute()
+    st.rerun()
 tx_types = ["Expense" , "Income" ,"Budget"]
 if "tx_counter" not in st.session_state:
     st.session_state.tx_counter = 0
@@ -103,10 +104,9 @@ amount = st.number_input("Amount",step=100.0,key= 1000 + st.session_state.tx_cou
 if st.button("Add transactions"):
     if amount > 0 and item:
         saved_df = add_transaction(date,item,amount,types)
-        saved_df.to_csv(f"{st.session_state.username}_expense.csv",index=False)
         st.success("Added!")
-        if types == "Initial balance":
-            item = "Starting balance"
+        #if types == "Initial balance":
+            #item = "Starting balance"
         st.session_state.tx_counter += 1
         time.sleep(1.5)
         st.rerun()
@@ -128,7 +128,7 @@ if not st.session_state.editor_switch:
     col1,col2 = st.columns(2)
     with col1:
         st.title("Income")
-        st.dataframe(day_in.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+        st.dataframe(day_in.drop(columns= ["Month","Type","Week","Day","Username"],errors="ignore"))
         money_made = day_in["Amount"].sum()
         if money_made > 0:
             st.success(f"Total money in today is:  ₦{money_made:,.2f} ")
@@ -136,7 +136,7 @@ if not st.session_state.editor_switch:
             st.write(f"Total money in today is:  ₦{money_made:,.2f} ")
     with col2:
         st.title("Expense")
-        st.dataframe(day_out.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+        st.dataframe(day_out.drop(columns= ["Month","Type","Week","Day","Username"],errors="ignore"))
         money_lost = day_out["Amount"].sum()
         if money_lost > 0:
             st.error(f"Total money out today is: ₦{money_lost:,.2f} ")
@@ -161,6 +161,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
