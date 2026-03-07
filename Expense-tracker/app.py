@@ -59,7 +59,7 @@ except:
          "Type" : [],
           "Username" : []}  
 file_df = pd.DataFrame(file_df)
-
+file_df.columns = [col.capitalize() for col in file_df.columns]
 if "df" not in st.session_state:
     df = file_df
     st.session_state.df = df
@@ -159,6 +159,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
