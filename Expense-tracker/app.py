@@ -63,8 +63,9 @@ file_df.columns = [col.capitalize() for col in file_df.columns]
 if "df" not in st.session_state:
     df = file_df
     st.session_state.df = df
-st.session_state.df["Date"] = pd.to_datetime(st.session_state.df["Date"],format="mixed").dt.date
-st.session_state.df = st.session_state.df.sort_values(by="Date" , ascending=False).reset_index(drop=True)
+if not st.session_state.df.empty:
+    st.session_state.df["Date"] = pd.to_datetime(st.session_state.df["Date"],format="mixed").dt.date
+    st.session_state.df = st.session_state.df.sort_values(by="Date" , ascending=False).reset_index(drop=True)
 
 
 initial = st.session_state.df[st.session_state.df["Type"] == "Initial balance"]["Amount"].sum()
@@ -159,6 +160,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
