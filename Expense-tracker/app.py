@@ -17,13 +17,13 @@ if "reg_counter" not in st.session_state:
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
    supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"])
-   Users = supabase.table("Users").select("*").execute().data
+   users = supabase.table("Users").select("*").execute().data
    
    with tabs1:
        username = st.text_input("Username",key="Username")
        password = st.text_input("Password",key="Password",type="password")
        if st.button("Login"):
-           if  not Users[(Users["Username"] == username) & (Users["Password"] == password)].empty:
+           if any(u["Username"] == username and u["Password"] == password for u in users):
               st.session_state.username = username
               st.rerun()
            else:
@@ -37,13 +37,10 @@ if not st.session_state.username:
                time.sleep(2.5)
                st.rerun()
            else:
-            if not Users[Users["Username"] == new_username].empty:
+            if any(u["Username"] == new_username for u in users):
                 st.error("Username already taken")
             else:
-                new_data = pd.DataFrame([{"Username" : new_username,
-                              "Password" : new_password}])
-                updated_users = pd.concat([Users,new_data] , ignore_index = True)
-                conn.update(worksheet="Users" , data=updated_users)
+                supabase.table("Users").insert({"Username" : new_username , "Password" : new_password}).execute()
                 st.success("Account successfully created , go to login page")
                 time.sleep(1.5)
                 st.session_state.reg_counter += 1
@@ -164,6 +161,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
