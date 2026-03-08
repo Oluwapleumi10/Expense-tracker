@@ -66,12 +66,12 @@ if "df" not in st.session_state:
 if not st.session_state.df.empty:
     st.session_state.df["Date"] = pd.to_datetime(st.session_state.df["Date"],format="mixed").dt.date
     st.session_state.df = st.session_state.df.sort_values(by="Date" , ascending=False).reset_index(drop=True)
-
-
-initial = st.session_state.df[st.session_state.df["Type"] == "Initial balance"]["Amount"].sum()
-total_income = st.session_state.df[st.session_state.df["Type"] == "Income"]["Amount"].sum()
-total_expense = st.session_state.df[st.session_state.df["Type"] == "Expense"]["Amount"].sum()
-balance = (total_income+initial) - total_expense
+    initial = st.session_state.df[st.session_state.df["Type"] == "Initial balance"]["Amount"].sum()
+    total_income = st.session_state.df[st.session_state.df["Type"] == "Income"]["Amount"].sum()
+    total_expense = st.session_state.df[st.session_state.df["Type"] == "Expense"]["Amount"].sum()
+    balance = (total_income+initial) - total_expense
+else:
+    initial =  total_income = total_expense = balance = 0
 st.metric(label="Balance" ,value=f"₦ {balance:,.2f}", delta="balance",delta_arrow="off")
 
 def add_transaction(dates,items,amounts,typess):
@@ -160,6 +160,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
