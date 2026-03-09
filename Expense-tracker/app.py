@@ -29,7 +29,7 @@ if not st.session_state.username:
                st.error("Wrong password or username")
    with tabs2:
        new_username = st.text_input("New username",key=f"Username{st.session_state.reg_counter}")
-       new_password = st.text_input("New password",key=f"Passowrd{st.session_state.reg_counter}",type="password")
+       new_password = st.text_input("New password",key=f"Password{st.session_state.reg_counter}",type="password")
        if st.button("Register"):
            if len(new_password) < 9 or  not any( char in new_password for char  in string.punctuation):
                st.error("Password can't be lesser than 9 characters and must contain a special character")
@@ -118,8 +118,9 @@ daily_table = st.session_state.df[st.session_state.df["Date"] == select_date ].d
 day_out = daily_table[daily_table["Type"] == "Expense"].reset_index(drop=True)
 day_in = daily_table[daily_table["Type"] == "Income"].reset_index(drop=True)
 budget = daily_table[daily_table["Type"] == "Budget"].reset_index(drop=True)
-if "toggle" not in st.session_state:
-   toggle = st.toggle("Edit mode",key="editor_switch")
+if "editor_switch" not in st.session_state:
+    st.session_state.editor_switch = False
+toggle = st.toggle("Edit mode", key="editor_switch")
 if not st.session_state.editor_switch:
     col1,col2 = st.columns(2)
     with col1:
@@ -157,6 +158,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget[["Item" , "Amount"]])
+
 
 
 
