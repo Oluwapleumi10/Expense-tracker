@@ -124,7 +124,7 @@ if not st.session_state.editor_switch:
     col1,col2 = st.columns(2)
     with col1:
         st.title("Income")
-        st.dataframe(day_in["Item" ,"Amount"])
+        st.dataframe(day_in[["Item"] ,["Amount"]])
         money_made = day_in["Amount"].sum()
         if money_made > 0:
             st.success(f"Total money in today is:  ₦{money_made:,.2f} ")
@@ -157,6 +157,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+
 
 
 
