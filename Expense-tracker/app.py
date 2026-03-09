@@ -139,9 +139,9 @@ if not st.session_state.editor_switch:
         else:
             st.write(f"Total money out today is: ₦{money_lost:,.2f} ")
 elif st.session_state.editor_switch:
-    edited_data = st.session_state.df[st.session_state.df["Date"] == select_date ].drop(columns= ["Month","Week","Day"],errors="ignore")
-    exculded_data = st.session_state.df[st.session_state.df["Date"] != select_date ].drop(columns= ["Month","Week","Day"],errors="ignore")
-    final_edited = st.data_editor(edited_data,num_rows="dynamic")
+    edited_data = st.session_state.df[st.session_state.df["Date"] == select_date])
+    exculded_data = st.session_state.df[st.session_state.df["Date"] != select_date ])
+    final_edited = st.data_editor(edited_data["Item","Amount"],num_rows="dynamic")
     if st.button("Save"):
         final_edited = pd.DataFrame(final_edited)
         final_excluded = pd.DataFrame(exculded_data)
@@ -156,7 +156,8 @@ elif st.session_state.editor_switch:
 
 
 st.title("Budget")
-st.dataframe(budget.drop(columns= ["Month","Type","Week","Day"],errors="ignore"))
+st.dataframe(budget[["Item" , "Amount"]])
+
 
 
 
