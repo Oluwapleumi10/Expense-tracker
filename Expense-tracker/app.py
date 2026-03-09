@@ -141,7 +141,7 @@ if not st.session_state.editor_switch:
 elif st.session_state.editor_switch:
     edited_data = st.session_state.df[st.session_state.df["Date"] == select_date]
     exculded_data = st.session_state.df[st.session_state.df["Date"] != select_date ]
-    final_edited = st.data_editor(edited_data["Item","Amount"],num_rows="dynamic")
+    final_edited = st.data_editor(edited_data,num_rows="dynamic")
     if st.button("Save"):
         final_edited = pd.DataFrame(final_edited)
         final_excluded = pd.DataFrame(exculded_data)
@@ -157,6 +157,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget[["Item" , "Amount"]])
+
 
 
 
