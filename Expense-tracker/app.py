@@ -139,8 +139,8 @@ if not st.session_state.editor_switch:
         else:
             st.write(f"Total money out today is: ₦{money_lost:,.2f} ")
 elif st.session_state.editor_switch:
-    edited_data = st.session_state.df[st.session_state.df["Date"] == select_date]
-    exculded_data = st.session_state.df[st.session_state.df["Date"] != select_date ]
+    edited_data = st.session_state.df[st.session_state.df["Date"] == select_date][["Item" ,"Amount"]]
+    exculded_data = st.session_state.df[st.session_state.df["Date"] != select_date ][["Item" , "Amount"]]
     final_edited = st.data_editor(edited_data,num_rows="dynamic")
     if st.button("Save"):
         final_edited = pd.DataFrame(final_edited)
@@ -157,6 +157,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget[["Item" , "Amount"]])
+
 
 
 
