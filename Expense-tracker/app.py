@@ -155,9 +155,10 @@ elif st.session_state.editor_switch:
         
         
 
-
+st.dataframe(final_edited)
 st.title("Budget")
 st.dataframe(budget[["Item" , "Amount"]])
+
 
 
 
