@@ -96,7 +96,7 @@ amount = st.number_input("Amount",step=100.0,key= 1000 + st.session_state.tx_cou
     
 
 
-
+st.write(st.session_state.tx_counter)
 if st.button("Add transactions"):
     if amount > 0 and item:
         saved_df = add_transaction(date,item,amount,types)
@@ -160,6 +160,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget[["Item" , "Amount"]])
+
 
 
 
