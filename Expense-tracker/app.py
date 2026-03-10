@@ -78,7 +78,7 @@ def add_transaction(dates,items,amounts,typess):
          "Type" : typess,
          "Username" : s_username,} 
     supabase.table("Transactions").insert(new_entry).execute()
-    st.rerun()
+    
 tx_types = ["Expense" , "Income" ,"Budget"]
 if "tx_counter" not in st.session_state:
     st.session_state.tx_counter = 0
@@ -160,6 +160,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget[["Item" , "Amount"]])
+
 
 
 
