@@ -141,13 +141,13 @@ if not st.session_state.editor_switch:
             st.write(f"Total money out today is: ₦{money_lost:,.2f} ")
 elif st.session_state.editor_switch:
     edited_data = st.session_state.df[st.session_state.df["Date"] == select_date][["Item" ,"Amount" , "Type"]]
-    exculded_data = st.session_state.df[st.session_state.df["Date"] != select_date ][["Item" , "Amount" , "Type"]]
+    excluded_data = st.session_state.df[st.session_state.df["Date"] != select_date ][["Item" , "Amount" , "Type"]]
     final_edited = st.data_editor(edited_data,num_rows="dynamic")
     if st.button("Save"):
-        final_edited = pd.DataFrame(final_edited)
-        final_excluded = pd.DataFrame(exculded_data)
-        final_data = pd.concat([final_edited,final_excluded],ignore_index=True)
-        final_data.to_csv(f"{st.session_state.username}_expense.csv",index=False)
+        final_data = pd.concat([final_edited,excluded_data],ignore_index=True)
+        supabase.table("Transactions").delete().eq("Username", s_username).eq("Date" , str(select_date)).execute()
+        edited_rows = final_edited[["Date" ,"Item" ,"Amount" , "Type" , "Username" ]].to_dict(orient="records")
+        supabase.table("Transactions").insert(edited_rows).execute()
         st.session_state.df = final_data
         st.success("Saved!")
         time.sleep(1.5)
@@ -158,6 +158,7 @@ elif st.session_state.editor_switch:
 
 st.title("Budget")
 st.dataframe(budget[["Item" , "Amount"]])
+
 
 
 
