@@ -1,16 +1,18 @@
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+from supabse import create_client
 from datetime import datetime
 import os
 import layout
 if "username" not in st.session_state or st.session_state.username == {}:
     st.stop()
 st.title("Analysis")
-file_name = f"{st.session_state.username}_expense.csv"
-if os.path.exists(file_name):
+supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"]) 
+file_df = supabase.table("Transactions").select("*").execute().data
+if not file_df:
     if "df" not in st.session_state:
-        df = pd.read_csv(f"{st.session_state.username}_expense.csv")
+        df = pd.Dataframe(file_df)
         st.session_state.df = df
         st.session_state.df["Date"] = pd.to_datetime(st.session_state.df["Date"],format="mixed").dt.date
         st.session_state.df = st.session_state.df.sort_values(by="Date" , ascending=False).reset_index(drop=True)
@@ -156,6 +158,7 @@ with tabs2:
         plot_graph("Expense",mode=modes)
     elif modes == "Month":
         plot_graph("Expense",mode=modes)
+
 
 
 
