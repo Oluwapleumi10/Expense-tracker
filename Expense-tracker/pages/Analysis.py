@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-from supabse import create_client
+from supabase import create_client
 from datetime import datetime
 import os
 import layout
@@ -158,6 +158,7 @@ with tabs2:
         plot_graph("Expense",mode=modes)
     elif modes == "Month":
         plot_graph("Expense",mode=modes)
+
 
 
 
