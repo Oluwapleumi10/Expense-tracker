@@ -9,7 +9,7 @@ if "username" not in st.session_state or st.session_state.username == {}:
     st.stop()
 st.title("Analysis")
 supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"]) 
-s_username = username
+s_username = st.session_state.username
 file_df = supabase.table("Transactions").select("*").eq("Username" ,s_username) .execute().data
 if  file_df:
     if "df" not in st.session_state:
@@ -159,6 +159,7 @@ with tabs2:
         plot_graph("Expense",mode=modes)
     elif modes == "Month":
         plot_graph("Expense",mode=modes)
+
 
 
 
