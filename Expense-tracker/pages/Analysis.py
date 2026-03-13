@@ -3,7 +3,6 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from supabase import create_client
 from datetime import datetime
-import os
 import layout
 if "username" not in st.session_state or st.session_state.username == {}:
     st.stop()
@@ -159,6 +158,7 @@ with tabs2:
         plot_graph("Expense",mode=modes)
     elif modes == "Month":
         plot_graph("Expense",mode=modes)
+
 
 
 
