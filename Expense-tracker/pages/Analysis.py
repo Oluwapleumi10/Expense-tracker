@@ -12,7 +12,7 @@ s_username = st.session_state.username
 file_df = supabase.table("Transactions").select("*").eq("Username" ,s_username) .execute().data
 if  file_df:
     if "df" not in st.session_state:
-        df = pd.Dataframe(file_df)
+        df = pd.DataFrame(file_df)
         st.session_state.df = df
         st.session_state.df["Date"] = pd.to_datetime(st.session_state.df["Date"],format="mixed").dt.date
         st.session_state.df = st.session_state.df.sort_values(by="Date" , ascending=False).reset_index(drop=True)
@@ -158,6 +158,7 @@ with tabs2:
         plot_graph("Expense",mode=modes)
     elif modes == "Month":
         plot_graph("Expense",mode=modes)
+
 
 
 
