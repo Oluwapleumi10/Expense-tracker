@@ -59,7 +59,7 @@ def plot_graph(graph_type,mode):
 #The code for weekly graph
         if mode == "Week":
             available_weeks = df["Week"].unique()
-            opt = st.selectbox("Select a week" , available_weeks,key=graph_type,format_func=format_week)
+            opt = st.selectbox("Select a week" , available_weeks,key=graph_type+"_week",format_func=format_week)
             filterw_df = df[df["Week"] == opt]
             week_days = filterw_df["Day"]
             week_days = week_days.unique()
@@ -92,7 +92,7 @@ def plot_graph(graph_type,mode):
 #The code for monthly graph           
         elif mode == "Month":
             available_months = df["Month"].unique()
-            option = st.selectbox("Select a month",available_months,key=graph_type,format_func=format_date)
+            option = st.selectbox("Select a month",available_months,key=graph_type+"_month",format_func=format_date)
             filtered_df = df[df["Month"] == option]
             month = filtered_df[filtered_df["Type"]== graph_type]
             if month.empty:
@@ -159,6 +159,7 @@ with tabs2:
         plot_graph("Expense",mode=modes)
     elif modes == "Month":
         plot_graph("Expense",mode=modes)
+
 
 
 
