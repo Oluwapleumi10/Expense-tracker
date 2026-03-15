@@ -119,8 +119,6 @@ daily_table = st.session_state.df[st.session_state.df["Date"] == pd.to_datetime(
 day_out = daily_table[daily_table["Type"] == "Expense"].reset_index(drop=True)
 day_in = daily_table[daily_table["Type"] == "Income"].reset_index(drop=True)
 budget = daily_table[daily_table["Type"] == "Budget"].reset_index(drop=True)
-st.write(type(select_date))  # temporary debug line
-st.write(type(st.session_state.df["Date"][0]))  # temporary debug line
 if "editor_switch" not in st.session_state:
     st.session_state.editor_switch = False
 toggle = st.toggle("Edit mode", key="editor_switch")
