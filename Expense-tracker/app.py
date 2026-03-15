@@ -115,7 +115,7 @@ if st.button("Add transactions"):
 
 
 select_date = st.date_input("Select a date",key="view_date")
-daily_table = st.session_state.df[st.session_state.df["Date"] == pd.to_datetime(select_date).date()].drop(columns="Date")
+daily_table = st.session_state.df[st.session_state.df["Date"].astype(str) == str(select_date)].drop(columns="Date")
 day_out = daily_table[daily_table["Type"] == "Expense"].reset_index(drop=True)
 day_in = daily_table[daily_table["Type"] == "Income"].reset_index(drop=True)
 budget = daily_table[daily_table["Type"] == "Budget"].reset_index(drop=True)
