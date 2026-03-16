@@ -86,7 +86,7 @@ if "Initial balance" not in st.session_state.df["Type"].unique():
     tx_types.append("Initial balance")
 
 date = st.date_input("Date",key="choose_date")
-types = st.selectbox("Type",tx_types)
+types = st.selectbox("Type",tx_types,key="types")
 if types == "Initial balance":
     item = "Starting balance"
 else:
@@ -115,7 +115,8 @@ if st.button("Add transactions"):
 
 
 select_date = st.date_input("Select a date",key="view_date")
-daily_table = st.session_state.df[st.session_state.df["Date"].astype(str) == str(select_date)].drop(columns="Date")
+daily_table = st.session_state.df[st.session_state.df["Date"] == select_date].drop(columns="Date")
+st.write(select_date)
 day_out = daily_table[daily_table["Type"] == "Expense"].reset_index(drop=True)
 day_in = daily_table[daily_table["Type"] == "Income"].reset_index(drop=True)
 budget = daily_table[daily_table["Type"] == "Budget"].reset_index(drop=True)
