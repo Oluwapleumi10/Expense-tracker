@@ -110,12 +110,18 @@ if st.button("Add transactions"):
         st.warning("Enter an amount and item")
         time.sleep(2.5)
         st.rerun()
+        
+if "view_date_value" not in st.session_state:
+    st.session_state.view_date_value = pd.Timestamp.today().date()
 
+select_date = st.date_input(
+    "Select a date", 
+    value=st.session_state.view_date_value,  # ← Use the saved value!
+    key="view_date"
+)
 
-
-
-select_date = st.date_input("Select a date",key="view_date")
-st.session_state.df["Date"] = pd.to_datetime(st.session_state.df["Date"],format="mixed").dt.date
+# Update session state whenever the user changes it
+st.session_state.view_date_value = select_date
 daily_table = st.session_state.df[st.session_state.df["Date"] == select_date].drop(columns="Date")
 day_out = daily_table[daily_table["Type"] == "Expense"].reset_index(drop=True)
 day_in = daily_table[daily_table["Type"] == "Income"].reset_index(drop=True)
