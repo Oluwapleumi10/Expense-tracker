@@ -78,38 +78,28 @@ def add_transaction(dates,items,amounts,typess):
          "Type" : typess,
          "Username" : s_username,} 
     supabase.table("Transactions").insert(new_entry).execute()
-    
-tx_types = ["Expense" , "Income" ,"Budget"]
-if "tx_counter" not in st.session_state:
-    st.session_state.tx_counter = 0
-if "Initial balance" not in st.session_state.df["Type"].unique():
-    tx_types.append("Initial balance")
+with st.form("Transaction form", clear_on_submit=True):  
+    tx_types = ["Expense" , "Income" ,"Budget"]
+    if "Initial balance" not in st.session_state.df["Type"].unique():
+        tx_types.append("Initial balance")
 
-date = st.date_input("Date",key="choose_date")
-types = st.selectbox("Type",tx_types,key="types")
-if types == "Initial balance":
-    item = "Starting balance"
-else:
-    item = st.text_input("Item",key= 0 + st.session_state.tx_counter)
-amount = st.number_input("Amount",step=100.0,key= 1000 + st.session_state.tx_counter)
-
-    
-
-
-
-if st.button("Add transactions"):
-    if amount > 0 and item:
-        add_transaction(date,item,amount,types)
-        st.success("Added!")
-        #if types == "Initial balance":
-            #item = "Starting balance"
-        st.session_state.tx_counter += 1
-        time.sleep(1.5)
-        st.rerun()
+    date = st.date_input("Date",key="choose_date")
+    types = st.selectbox("Type",tx_types,key="types")
+    if types == "Initial balance":
+        item = "Starting balance"
     else:
-        st.warning("Enter an amount and item")
-        time.sleep(2.5)
-        st.rerun()
+        item = st.text_input("Item",key="tx_item")
+    amount = st.number_input("Amount",step=100.0,key="tx_amount")
+    if st.form_submit_button("Add transactions"):
+        if amount > 0 and item:
+            add_transaction(date,item,amount,types)
+            st.success("Added!")
+            time.sleep(1.5)
+            st.rerun()
+        else:
+            st.warning("Enter an amount and item")
+            time.sleep(2.5)
+            st.rerun()
         
 if "view_date_value" not in st.session_state:
     st.session_state.view_date_value = pd.Timestamp.today().date()
