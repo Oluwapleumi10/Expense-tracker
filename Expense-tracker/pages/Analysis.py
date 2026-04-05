@@ -1,15 +1,19 @@
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-from supabase import create_client
 from datetime import datetime
+from api_connect import fetch_tx
 import layout
+
+
+#This is where the work starts 
+
 if "username" not in st.session_state or st.session_state.username == {}:
     st.stop()
 st.title("Analysis")
-supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"]) 
+#supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"]) 
 s_username = st.session_state.username
-file_df = supabase.table("Transactions").select("*").eq("Username" ,s_username) .execute().data
+file_df = fetch_tx(s_username)
 if  file_df:
     if "df" not in st.session_state:
         df = pd.DataFrame(file_df)
@@ -46,6 +50,7 @@ joined_day = joined_date.day
 
 
 #Creating a function to plot graph for both income and expenses
+#This is the place we start working on the graphs
 def plot_graph(graph_type,mode):
         graph_info = {
             "Income" : {"color" :"green","y":"Income", "x":"Total Amount","Month_title":"Monthly Income",
@@ -134,7 +139,7 @@ def plot_graph(graph_type,mode):
                     col2.metric(f"Most frequent {graph["message2"]} ","Null")
                 
                 col3.metric(f"Total {graph["message2"]}",f"₦{total:,.2f}")
-                    
+# We stop the logic here                   
 
             
         

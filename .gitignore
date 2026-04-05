@@ -2,3 +2,5 @@
 __pychache__/
 *.csv
 *.pyc
+Expense-tracker/app.py
+Expense-tracker/__pycache__/layout.cpython-313.pyc

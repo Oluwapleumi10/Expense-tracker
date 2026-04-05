@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-from supabase import create_client
+from api_connect import fetch_users,fetch_tx,supabase
+from datetime import datetime
 import time
 import layout
 import string
@@ -10,7 +10,6 @@ import os
 
 
 st.title("Expense Tracker")
-supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"])   
 if "username" not in st.session_state:
     st.session_state.username = {}
 if "reg_counter" not in st.session_state:
@@ -18,7 +17,7 @@ if "reg_counter" not in st.session_state:
 if not st.session_state.username:
    tabs1,tabs2 = st.tabs(["Login","Registration"])
    with tabs1:
-       users = supabase.table("Users").select("*").execute().data
+       users = fetch_users()
        username = st.text_input("Username",key="Username")
        password = st.text_input("Password",key="Password",type="password")
        if st.button("Login"):
@@ -47,10 +46,10 @@ if not st.session_state.username:
    st.stop()
 
 layout.show_sidebar()
-        
-    
+
+
 s_username = st.session_state.username
-file_df = supabase.table("Transactions").select("*").eq("Username" ,s_username) .execute().data
+file_df = fetch_tx(username=s_username)
 if not file_df:
     file_df =  {"Date" : ["2000-01-01"],
          "Item" : [""],
@@ -58,8 +57,7 @@ if not file_df:
          "Type" : [""],
           "Username" : [s_username]}  
 file_df = pd.DataFrame(file_df)
-file_df.columns = [col.capitalize() for col in file_df.columns]
-#if "df" not in st.session_state:
+#file_df.columns = [col.capitalize() for col in file_df.columns]
 df = file_df
 st.session_state.df = df
 
@@ -70,7 +68,6 @@ total_income = st.session_state.df[st.session_state.df["Type"] == "Income"]["Amo
 total_expense = st.session_state.df[st.session_state.df["Type"] == "Expense"]["Amount"].sum()
 balance = (total_income+initial) - total_expense
 st.metric(label="Balance" ,value=f"₦ {balance:,.2f}", delta="balance",delta_arrow="off")
-
 def add_transaction(dates,items,amounts,typess):
     new_entry = {"Date" : str(dates),
          "Item" : items,
@@ -94,7 +91,8 @@ with st.form("Transaction form", clear_on_submit=True):
         if amount > 0 and item:
             add_transaction(date,item,amount,types)
             st.success("Added!")
-            time.sleep(1.5)
+            fetch_tx.clear()
+            time.sleep(1)
             st.rerun()
         else:
             st.warning("Enter an amount and item")
@@ -138,22 +136,34 @@ if not st.session_state.editor_switch:
         else:
             st.write(f"Total money out today is: ₦{money_lost:,.2f} ")
 elif st.session_state.editor_switch:
-    edited_data = st.session_state.df[st.session_state.df["Date"] == select_date][["Item" ,"Amount" , "Type"]]
-    excluded_data = st.session_state.df[st.session_state.df["Date"] != select_date ][["Item" , "Amount" , "Type"]]
-    final_edited = st.data_editor(edited_data,num_rows="dynamic")
+    edited_data = st.session_state.df[st.session_state.df["Date"] == select_date]
+    edited_data = edited_data.reset_index(drop=True)
+    old_ids = set(edited_data["id"].to_list())
+    excluded_data = st.session_state.df[st.session_state.df["Date"] != select_date]
+    final_edited = st.data_editor(edited_data, num_rows="dynamic", column_config={"id": None, "created_at": None, "Date": None, "Username": None}, hide_index=True,
+                                 key="et_editor" )
+    new_ids = set(final_edited["id"].to_list())
     if st.button("Save"):
-        final_edited["Date"] = str(select_date)
+        final_edited["Date"] = select_date.strftime("%Y-%m-%d")
         final_edited["Username"] = s_username
-        final_data = pd.concat([final_edited,excluded_data],ignore_index=True)
-        supabase.table("Transactions").delete().eq("Username", s_username).eq("Date" , str(select_date)).execute()
-        edited_rows = final_edited[["Date" ,"Item" ,"Amount" , "Type" , "Username" ]].to_dict(orient="records")
-        supabase.table("Transactions").insert(edited_rows).execute()
-        st.session_state.df = final_data
+        delete_ids = list(old_ids - new_ids)
+        merged_data = pd.concat([final_edited, excluded_data], ignore_index=True)
+        for_upsert = final_edited.dropna(subset=["id"])
+        for_upsert = for_upsert.to_dict(orient="records")
+        new_rows = final_edited[final_edited["id"].isna()].drop(columns=["id","created_at"])
+        added_rows = new_rows.to_dict(orient="records")
+        st.write(added_rows)
+        if added_rows:
+         supabase.table("Transactions").insert(added_rows).execute()
+        if for_upsert:
+         supabase.table("Transactions").upsert(for_upsert).execute()
+        if delete_ids:
+         supabase.table("Transactions").delete().in_("id", delete_ids).execute()
+        st.session_state.df = merged_data
         st.success("Saved!")
+        fetch_tx.clear()
         time.sleep(1.5)
         st.rerun()
-        
-        
 
 
 st.title("Budget")
