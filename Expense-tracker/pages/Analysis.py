@@ -14,9 +14,9 @@ st.title("Analysis")
 #supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"]) 
 s_username = st.session_state.username
 file_df = fetch_tx(s_username)
-if  file_df:
+if not file_df.empty:
     if "df" not in st.session_state:
-        df = pd.DataFrame(file_df)
+        df = file_df
         st.session_state.df = df
         st.session_state.df["Date"] = pd.to_datetime(st.session_state.df["Date"],format="mixed").dt.date
         st.session_state.df = st.session_state.df.sort_values(by="Date" , ascending=False).reset_index(drop=True)
