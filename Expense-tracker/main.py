@@ -5,8 +5,9 @@ from api_connect import fetch_user
 from utils import backup_setup
 
 app = st.Page("app.py" , title="App")
-analysis = st.Page("others/Analysis.py" , title="Analysis")
+analysis = st.Page("others/Analysis.py" , title="Analysis📊")
 log_in = st.Page("login.py")
+settings = st.Page("settings.py", title="Settings⚙")
 
 if "attempt" not in st.session_state:
     st.session_state.attempt = 0
@@ -41,5 +42,5 @@ else:
         st.subheader("Set up a security question")
         backup_setup(username)
     else:
-        pages = st.navigation([app,analysis])
+        pages = st.navigation([app,analysis,settings])
         pages.run()
