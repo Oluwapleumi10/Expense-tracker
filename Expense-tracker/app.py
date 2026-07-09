@@ -1,30 +1,20 @@
 import streamlit as st
 import pandas as pd
-from api_connect import fetch_tx,supasafe,fetch_budget,fetch_categories,fetch_user
-from datetime import datetime
+from api_connect import fetch_tx,supasafe,fetch_budget,fetch_categories,add_category,add_transaction
+from datetime import datetime,timedelta
 import time
 import layout
 from layout import clean_input,change_state,data_entry
 from utils import format_date,format_amount
 from edit_mode import editor_toggle
 from stylist import format_df
-user_info = fetch_user(st.session_state.username,mode="verification")
-user_currency = user_info[0]["Currency"]
-if "currency" not in st.session_state:
-    st.session_state.currency = user_currency
-#st.title("Expense Tracker")
+import app_logic as lg
 layout.show_sidebar()
 
 s_username = st.session_state.username
 file_df = fetch_tx(username=s_username)
 if file_df.empty:
-    file_df =  {"Date" : ["2000-01-01"],
-         "Category" : [""],
-         "Item" : [""],
-         "Amount" : [0],
-         "Type" : [""],
-          "Username" : [s_username]}  
-    file_df = pd.DataFrame(file_df)
+    file_df = lg.default_file("Tx")
 #file_df.columns = [col.capitalize() for col in file_df.columns]
 df = file_df
 st.session_state.df = df
@@ -45,30 +35,20 @@ if budget_df.empty:
                  "Username" : [""],}
     budget_df = pd.DataFrame(budget_df)
 
-def item_spec(labelling,radios,):
-    value = st.radio(labelling,radios,horizontal=True,index=None)
-    return value
-
 
 b_df = budget_df
 st.session_state.b_df = b_df
 st.session_state.b_df["Date"] = pd.to_datetime(st.session_state.b_df["Date"],format="mixed")#.dt.date
 st.session_state.b_df = st.session_state.b_df.sort_values(by="Date" , ascending=False).reset_index(drop=True)
 #Creating the add transaction function
-def add_transaction(dates,items,amounts,typess,category):
+def data_clean(dates,items,amounts,typess,category):
     new_entry = {"Date" : str(dates),
         "Categories_id" : category,
          "Item" : clean_input(items),
          "Type" : typess,
          "Amount" : amounts,
          "Username" : s_username,} 
-    if new_entry["Type"] == "Budget":
-      new_entry["Date"] = dates.strftime("%Y-%m-01")
-      new_entry.pop("Item",None)
-      new_entry.pop("Type",None)
-      supasafe.table("Budget").insert(new_entry).execute()
-    else:
-      supasafe.table("Transaction_v2").insert(new_entry).execute()
+    return new_entry
 cate_raw = fetch_categories(s_username)
 cate_data = list(cate_raw.keys())
 tx_types = ["Expense" , "Income" ,"Budget"]
@@ -77,21 +57,36 @@ if "Initial balance" not in st.session_state.df["Type"].unique():
     st.markdown("You need to  record an initial balance before making transactions")
 if "tx_counter" not in st.session_state:
     st.session_state.tx_counter = 0
+if "master_date" not in st.session_state:
+    st.session_state.master_date = default_time
+col_a,col_b,col_c = st.columns([1,2,1],gap="small")
+def date_stepper(step):
+    if step == "+":
+        st.session_state.master_date += timedelta(days=1)
+    elif step == "-":
+          st.session_state.master_date -= timedelta(days=1)
+with col_a:
+    st.button("◀",on_click=date_stepper,args=("-",))
+with col_b:
+    date = st.date_input("Date",key="master_date",label_visibility="collapsed")
+with col_c:
+    st.button("▶",on_click=date_stepper,args=("+",))
 item_key = "item_box"
-date,types,category,item,amount = data_entry(item_key,st.session_state.df["Item"],tx_types,cate_data)
-st.write(st.session_state.master_date)
+types,category,item,amount = data_entry(item_key,st.session_state.df["Item"],tx_types,cate_data)
 if st.button("Add transactions"):
     if amount > 0 :
+        if types == "Budget":
+            table_loc = "Budget"
+        else:
+            table_loc = "Transaction_v2"
         if category not in cate_data:
             new_category = {"Category_name":category,"Username":s_username}
-            new_cate_data = supasafe.table("Categories").insert(new_category).execute().data
-            category = new_cate_data[0]["id"]
+            category = add_category(new_category)#<- i didnt add the second parameter
         else:
             category = cate_raw[category]
-        add_transaction(date,item,amount,types,category)
+        transaction_data = data_clean(date,item,amount,types,category)
+        add_transaction(transaction_data,table_loc)
         st.success("Added!")
-        fetch_tx.clear()
-        fetch_budget.clear()
         st.session_state.tx_counter += 1
         change_state(item_key,"")
         time.sleep(0.5)
@@ -101,8 +96,8 @@ if st.button("Add transactions"):
         time.sleep(0.5)
         st.rerun()
         
-if "view_date_value" not in st.session_state:
-    st.session_state.view_date_value = pd.Timestamp.today().date()
+#if "view_date_value" not in st.session_state:
+    #st.session_state.view_date_value = pd.Timestamp.today().date()
 
 select_date = st.session_state.master_date
 daily_table = st.session_state.df[st.session_state.df["Date"] == select_date].drop(columns="Date")

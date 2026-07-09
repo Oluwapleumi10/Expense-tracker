@@ -68,7 +68,7 @@ def fetch_budget(username):
     budget_data = budget_data.rename(columns={"Categories.Category_name":"Category"})
     return budget_data
 
-
+@st.cache_data
 def fetch_categories(username):
     raw_data = supasafe.table("Categories").select("id","Category_name").in_("Username",["System",username]).execute().data
     category_data = {box["Category_name"]:box["id"] for box in raw_data}
@@ -83,3 +83,29 @@ def change_currency(to,username):
      st.warning("An error occured")
     time.sleep(0.7)
 
+def add_transaction(transaction,table):
+   if transaction["Type"] == "Budget":
+      transaction["Date"] = transaction["Date"].strftime("%Y-%m-01")
+      transaction.pop("Item",None)
+      transaction.pop("Type",None)
+      supasafe.table(table).insert(transaction).execute()
+      fetch_budget.clear()
+   else:
+      supasafe.table(table).insert(transaction).execute()
+      fetch_tx.clear()
+def add_category(category,table):
+   new_category_id = supasafe.table(table).insert(category).execute().data
+   fetch_categories.clear()
+   return new_category_id[0]["id"]
+
+def edit_transaction(table,types,insert=None,upsert=None,delete_id=None):
+    if insert:
+        supasafe.table(table).insert(insert).execute()
+    if upsert:
+        supasafe.table(table).upsert(upsert).execute()
+    if delete_id:
+        supasafe.table(table).delete().in_("id", delete_id).execute()
+    if types == "Budget":
+        fetch_budget.clear()
+    else:
+        fetch_tx.clear()

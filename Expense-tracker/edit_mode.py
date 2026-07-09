@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from api_connect import check_users,fetch_tx,supabase,fetch_budget,fetch_categories
+from api_connect import check_users,fetch_tx,supabase,fetch_budget,fetch_categories,edit_transaction
 from datetime import datetime
 import time
 import layout
@@ -19,7 +19,7 @@ def editor_toggle(trans_type):
       return data
 
     s_username = st.session_state.username
-    select_date = st.session_state.view_date_value
+    select_date = st.session_state.master_date
     b_df = st.session_state.b_df
 
     st.session_state.b_df["Month"] = st.session_state.b_df["Date"].dt.to_period("M")  
@@ -29,8 +29,6 @@ def editor_toggle(trans_type):
 
     cate_raw = fetch_categories(username=s_username)
     cate_data = list(cate_raw.keys())
-    cate_data.insert(1,"Add a Category")
-
     opt = None
     if trans_type == "Budget":
       opt = st.selectbox("Select month" ,b_months, key="budget_months",format_func=format_date) 
@@ -54,13 +52,11 @@ def editor_toggle(trans_type):
         final_edited["Username"] = s_username
         final_edited["Category"] = final_edited["Category"].map(cate_raw)
         final_edited = final_edited.rename(columns={"Category":"Categories_id"})
-        excluded_data["Category"] = excluded_data["Category"].map(cate_raw)
-        excluded_data = excluded_data.rename(columns={"Category":"Categories_id"})
+        #excluded_data["Category"] = excluded_data["Category"].map(cate_raw)
+        #excluded_data = excluded_data.rename(columns={"Category":"Categories_id"})
         delete_ids = list(old_ids - new_ids)
-        merged_data = pd.concat([final_edited, excluded_data],ignore_index=True)
         for_upsert = final_edited.dropna(subset=["id"])
         new_rows = final_edited[final_edited["id"].isna()].drop(columns=["id","created_at"])
-       
         #we do the editings for the budget right before upload
         if trans_type == "Budget":
           new_rows["Month"] = opt
@@ -68,14 +64,7 @@ def editor_toggle(trans_type):
           new_rows = to_supabase(new_rows)
         for_upsert = for_upsert.to_dict(orient="records")
         added_rows = new_rows.to_dict(orient="records")
-        if added_rows:
-         supabase.table(usage["table"]).insert(added_rows).execute()
-        if for_upsert:
-         supabase.table(usage["table"]).upsert(for_upsert).execute()
-        if delete_ids:
-         supabase.table(usage["table"]).delete().in_("id", delete_ids).execute()
-        usage["session_state"] = merged_data
+        edit_transaction(usage["table"],trans_type,added_rows,for_upsert,delete_ids)
         st.success("Saved!")
-        usage["clear"]
-        time.sleep(1)
+        time.sleep(0.5)
         st.rerun()
