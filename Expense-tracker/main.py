@@ -3,6 +3,7 @@ from streamlit_cookies_controller import CookieController
 import time
 from api_connect import fetch_user
 from utils import backup_setup
+import app_logic as lg
 
 app = st.Page("app.py" , title="App")
 analysis = st.Page("others/Analysis.py" , title="Analysis📊")
@@ -37,9 +38,10 @@ if st.session_state.username == {}:
 else:
     username = st.session_state.username
     data = fetch_user(username,mode="verification")
+    if "currency" not in st.session_state:
+       st.session_state.currency = data[0]["Currency"]
     if not data[0]["Security Question"]:
-        st.session_state.navigation["phase"] = 1
-        st.subheader("Set up a security question")
+        st.subheader("Set Security Question")
         backup_setup(username)
     else:
         pages = st.navigation([app,analysis,settings])
