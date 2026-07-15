@@ -3,7 +3,6 @@ import streamlit as st
 from datetime import datetime,timedelta
 from layout import clean_input
 from api_connect import fetch_categories,add_category,add_transaction,fetch_user
-from utils import backup_setup
 
 BUDGET = "Budget"
 TRANSACTION = "Transaction_v2"
