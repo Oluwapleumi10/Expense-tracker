@@ -74,7 +74,7 @@ def fetch_categories(username):
     category_data = {box["Category_name"]:box["id"] for box in raw_data}
     return category_data
 
-def change_currency(to,username):
+#def change_currency(to,username):
     change = supasafe.table("Users").update({"Currency":to}).eq("Username",username).execute().data
     if change:
      st.session_state.currency = to
@@ -93,6 +93,14 @@ def add_transaction(transaction,table):
    else:
       supasafe.table(table).insert(transaction).execute()
       fetch_tx.clear()
+
+def create_user(insert_dict:dict,table_column):
+   created = supasafe.table(table_column).insert(insert_dict).execute().data
+   return created
+def update_user_info(table_colum,update_dict:dict,eq_column,eq_value):
+   updated = supasafe.table(table_colum).update(update_dict).eq(eq_column,eq_value).execute().data
+   return updated
+
 def add_category(category,table):
    new_category_id = supasafe.table(table).insert(category).execute().data
    fetch_categories.clear()

@@ -4,23 +4,28 @@ from api_connect import fetch_tx,fetch_budget,fetch_categories
 from datetime import timedelta
 import time
 import layout
-from layout import change_state,data_entry
-from utils import format_date,format_amount
+from layout import change_state,my_search_box
 from edit_mode import editor_toggle
-from stylist import format_df
+from stylist import format_df,format_amount,format_date
 import app_logic as lg
+from utils import arrange_category
 
 
 layout.show_sidebar()
 
 s_username = st.session_state.username
+s_currency = st.session_state.currency
 file_df = fetch_tx(username=s_username)
 if file_df.empty:
     file_df = lg.default_file("Tx")
+    tx_types = ["Initial balance"]
+    st.markdown("You need to  record an initial balance before making transactions")
+else:
+    tx_types = ["Expense" , "Income" ,"Budget"]
 st.session_state.df = file_df
 st.session_state.df = lg.sort_data(st.session_state.df)
 balance,_,_ = lg.calculate_balance(st.session_state.df)
-st.metric(label="Balance" ,value=format_amount(balance,0), delta="balance",delta_arrow="off")
+balancd_metric = st.metric(label="Balance" ,value=format_amount(balance,0,s_currency), delta="balance",delta_arrow="off")
 
 #Budget df 
 budget_df = fetch_budget(username=s_username)
@@ -30,10 +35,6 @@ st.session_state.b_df = budget_df
 st.session_state.b_df = lg.sort_data(st.session_state.b_df)
 
 #Data entry interphase
-tx_types = ["Expense" , "Income" ,"Budget"]
-if "Initial balance" not in st.session_state.df["Type"].unique():
-    tx_types = ["Initial balance"]
-    st.markdown("You need to  record an initial balance before making transactions")
 if "tx_counter" not in st.session_state:
     st.session_state.tx_counter = 0
 if "master_date" not in st.session_state:
@@ -54,7 +55,14 @@ with col_c:
 item_key = "item_box"
 cate_raw = fetch_categories(s_username)
 cate_data = list(cate_raw.keys())
-types,category,item,amount = data_entry(item_key,st.session_state.df["Item"],tx_types,cate_data)
+types = st.selectbox("Type",tx_types,key="types")
+category_data = arrange_category(cate_data,types)
+category = st.selectbox("Categories",category_data,key="categories")
+if category == "Add Category":
+    category = st.text_input("New Category",key="new_category")
+item = my_search_box("Item",item_key,st.session_state.df["Item"],placeholder="Optional")
+amount = st.number_input("Amount",step=100.0,key=f"tx_amount{+ st.session_state.tx_counter}")
+#types,category,item,amount = data_entry(item_key,st.session_state.df["Item"],tx_types,cate_data)
 
 
 if st.button("Add transactions"):
@@ -82,17 +90,17 @@ if not st.session_state.editor_switch:
         format_df(day_in[["Category","Amount"]],2,"Amount")
         money_made = day_in["Amount"].sum()
         if money_made > 0:
-            st.success(f"Money In: {format_amount(money_made,0)} ")
+            st.success(f"Money In: {format_amount(money_made,0,s_currency)} ")
         else:
-            st.write(f"Money In: {format_amount(money_made,0)} ")
+            st.write(f"Money In: {format_amount(money_made,0,s_currency)} ")
     with col2:
         st.subheader("Expense")
         format_df(day_out[["Category","Amount"]],2,"Amount")
         money_lost = day_out["Amount"].sum()
         if money_lost > 0:
-            st.error(f"Money Out: {format_amount(money_lost,0)} ")
+            st.error(f"Money Out: {format_amount(money_lost,0,s_currency)} ")
         else:
-            st.write(f"Money Out: {format_amount(money_lost,0)} ")
+            st.write(f"Money Out: {format_amount(money_lost,0,s_currency)} ")
 elif st.session_state.editor_switch:
     editor_toggle("Transaction")
 
@@ -107,11 +115,9 @@ if not st.session_state.budget_toggle:
     st.subheader("Budget")
     opt = st.selectbox("Select month" ,b_months, key="budget_months_for_app",format_func=format_date) 
     month_budget,_,_ = lg.filtered_transaction(opt,b_df,"Budget","Month")
-    st.dataframe(month_budget[["Category" , "Amount"]].style.format(formatter = lambda x : format_amount(x,2),subset=["Amount"]))
+    st.dataframe(month_budget[["Category" , "Amount"]].style.format(formatter = lambda x : format_amount(x,2,s_currency),subset=["Amount"]))
 elif st.session_state.budget_toggle:
     editor_toggle("Budget")
-
-
 
 
 

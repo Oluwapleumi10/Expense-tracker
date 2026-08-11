@@ -36,17 +36,17 @@ def calculate_balance(data,type_column="Type",income_column="Income",expense_col
 #Create an empty file ,to be able to make calculations for users that have empty transaction
 def default_file(types):
     if types == "Tx":
-      file_df =  {"Date" : [default_time],
-         "Category" : [""],
-         "Item" : [""],
-         "Amount" : [0],
-         "Type" : [""],
-          "Username" : [""]} 
+      file_df =  {"Date" : [],
+         "Category" : [],
+         "Item" : [],
+         "Amount" : [],
+         "Type" : [],
+          "Username" : []} 
     elif types == "Budget":
-       file_df = {"Date" : [f"{default_time}"],
-                 "Amount" : [0],
-                 "Category" : [""],
-                 "Username" : [""],}
+       file_df = {"Date" : [],
+                 "Amount" : [],
+                 "Category" : [],
+                 "Username" : [],}
     file_df = pd.DataFrame(file_df) 
     return file_df 
 
@@ -92,3 +92,22 @@ def filtered_transaction(date,data,transaction_type,date_column="Date"):
        filtered_in = filtered_data[filtered_data["Type"] == "Income"].reset_index(drop=True)
        filtered_out = filtered_data[filtered_data["Type"] == "Expense"].reset_index(drop=True)
        return filtered_data,filtered_in,filtered_out
+
+
+def unify_column(dataframe,column):
+   df = dataframe.copy()
+   df["Uniform_Item"] = df[column].str.replace(" ","").str.replace(r"s$","",regex=True).str.title()
+   return df["Uniform_Item"]
+
+#Maps the values(list) of a dictionary to the key , like an inverse...
+def item_to_category(category_dic):
+   item_to_cat = {}
+   for cate,items_list in category_dic.items():
+      for item in items_list:
+        item_to_cat[item] = cate
+   return item_to_cat
+
+
+
+def clean_column(data,column):
+   data[column].str.strip().str.title()

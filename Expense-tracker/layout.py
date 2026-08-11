@@ -3,7 +3,6 @@ import streamlit as st
 from difflib import get_close_matches
 from st_keyup import st_keyup
 from datetime import datetime,timedelta
-from utils import arrange_category
 def clean_input(input):
    clean = input.strip()
    if clean == "":
@@ -15,7 +14,7 @@ def change_state(state,value):
     st.session_state[state] = value
     st.session_state[f"{state}_counter"] += 1
 
-
+@st.fragment
 def my_search_box(label,keys,data,**kwargs):
     if f"{keys}_counter"not in st.session_state:
         st.session_state[f"{keys}_counter"] = 0
@@ -44,18 +43,14 @@ def my_search_box(label,keys,data,**kwargs):
             st.button(f"{item}",type="tertiary",use_container_width=True,on_click= change_state,args=(keys,item),key=f"{item}")
     return keyup
 
-@st.fragment
-def data_entry(key,data,tx_types,cat_data):
-  types = st.selectbox("Type",tx_types,key="types")
-  category_data = arrange_category(cat_data,types)
-  category = st.selectbox("Categories",category_data,key="categories")
-  if category == "Add Category":
-      category = st.text_input("New Category",key="new_category")  
-  item = my_search_box("Item",key,data,placeholder="Optional")
-  amount = st.number_input("Amount",step=100.0,key=f"tx_amount{+ st.session_state.tx_counter}")
-  return  types , category , item , amount
 
 
+def analysis_sidebar(switch_key):
+  with st.sidebar:
+    modes = st.radio("View By",["Month","Week"],key="radio")
+    h2h_toggle = st.toggle("H2h mode",key=switch_key)
+    st.divider()
+  return modes
 
 
 

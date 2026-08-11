@@ -1,7 +1,7 @@
 import datetime as date
 import bcrypt
 import streamlit as st
-from api_connect import supasafe,fetch_user,fetch_tx,fetch_budget,fetch_categories
+from api_connect import supasafe,fetch_user,fetch_tx,fetch_budget,update_user_info
 import time
 import string
 def format_date(date_period):
@@ -11,6 +11,22 @@ def hash_decode(password):
     encoded_pass = bcrypt.hashpw(password.encode("utf-8"),bcrypt.gensalt())
     decoded_pass = encoded_pass.decode("utf-8")
     return decoded_pass
+
+
+
+def password_citeria(password,username=None):
+    if password == username:
+        valid = False
+        message = "You cant use username also as password"
+    elif len(password) < 9 or  not any( char in password for char  in string.punctuation):
+        valid = False
+        message = "Password can't be lesser than 9 characters and must contain a special character"
+    else:
+        valid = True
+        message = "Valid Password"
+    return valid,message
+
+
 
 def validate_password(validating_password,typed_password):
     val_password = validating_password.encode("utf-8")
@@ -73,7 +89,7 @@ def change_password(username,state_list):
                     if st.button("Confirm"):
                         st.success("Password reset")
                         changed_password = hash_decode(attempt2)
-                        supasafe.table("Users").update({"Password":changed_password}).eq("Username",username).execute()
+                        update_user_info("Users",{"Password":changed_password},"Username",username)
                         states = state_list
                         for state in states:
                           if state in st.session_state:
@@ -83,80 +99,17 @@ def change_password(username,state_list):
                 else:
                     st.toast("Password doesnt match")
      st.warning("Your password should be at least 9 digits long and must contian a special character")
-def reset_state(state_list):
+def reset_state(state_list,rerun=True):
      states = state_list
      for state in states:
         if state in st.session_state:
           del st.session_state[state]
+        if rerun == True:
           st.rerun()
 def clear_cache():
     fetch_tx.clear()
     fetch_budget.clear()
 
-def format_amount(amount,format_lenght,with_emoji=False):
-    thousand = 1 * 10**3
-    million = 1 * 10**6 
-    billion = 1 * 10**9
-    trillion = 1 * 10**12
-    amounted = abs(amount)
-    if amount < 0:
-        symbol = f"\u2011{st.session_state.currency}"
-    else:
-        symbol = st.session_state.currency
-    
-
-    if with_emoji:
-            if amount > 0:
-                emoji = "🟢"
-            elif amount < 0:
-                emoji = "🔴"
-            else:
-                emoji = ""
-    else:
-        emoji = ""
-    
-        
-    if amounted >= trillion:
-        amount_fx,figure = [amounted/trillion,"t"]
-    elif amounted >= billion:
-        amount_fx,figure = [amounted/billion,"b"]
-    elif amounted >= million:
-        amount_fx,figure = [amounted/million,"m"]
-    elif amounted >= thousand:
-        amount_fx,figure = [amounted/thousand,"k"]
-    else:
-        amount_fx,figure = [amounted,""]
-    
-    if format_lenght == 0:
-        display_amount = amounted
-        figure = None
-    elif format_lenght == 1:
-       display_amount = amount_fx
-    elif format_lenght == 2:
-         if amounted >= 100000:
-            display_amount = amount_fx
-         else:
-            display_amount = amounted
-            figure = None
-
-    if figure:
-       format_fx = f"{emoji}{symbol}{display_amount:,.2f}{figure}"
-    else:
-        format_fx = f"{emoji}{symbol}{display_amount:,.2f}"
-    return format_fx
-    
-def display_expander(dates,data):
-    for date in dates:
-        day = data[data["Period"] == date]
-        total_income =  day[day["Type"] == "Income"]["Amount"].sum()
-        total_expense = day[day["Type"] =="Expense"]["Amount"].sum()
-        balance = total_income - total_expense
-        formatted_in = format_amount(total_income,1)
-        formatted_out = format_amount(total_expense,1)
-        formatted_bal = format_amount(balance,1)
-        with st.expander( f"{date} \u2003🟢{formatted_in} \u2003🔴{formatted_out}\u2003 ➡\u00A0{formatted_bal}"):
-            st_day = day[["Category","Amount","Type"]]
-            st.dataframe(st_day,hide_index=True)
 def merge_column(data,columnss,name):
     column_a = columnss[0]
     column_b = columnss[1]
@@ -189,16 +142,4 @@ def arrange_category(cate,tx_type):
         cate_data.append("Add Category")
     return cate_data
 
-
-
-
-
-
-'''if difference:
-    if difference < 0:
-        return f"🔴{difference}"
-    elif difference == 0:
-        return f"🔘{difference}"
-    else:
-        return f"🟢+{difference}" $   ₦'''
       
