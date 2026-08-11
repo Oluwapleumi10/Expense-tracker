@@ -1,173 +1,123 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-from supabase import create_client
+from api_connect import fetch_tx,fetch_budget,fetch_categories
+from datetime import timedelta
 import time
 import layout
-import string
-import os
+from layout import change_state,my_search_box
+from edit_mode import editor_toggle
+from stylist import format_df,format_amount,format_date
+import app_logic as lg
+from utils import arrange_category
 
-
-
-st.title("Expense Tracker")
-supabase = create_client(st.secrets["SUPABASE_URL"],st.secrets["SUPABASE_KEY"])   
-if "username" not in st.session_state:
-    st.session_state.username = {}
-if "reg_counter" not in st.session_state:
-    st.session_state.reg_counter = 0
-if not st.session_state.username:
-   tabs1,tabs2 = st.tabs(["Login","Registration"])
-   with tabs1:
-       users = supabase.table("Users").select("*").execute().data
-       username = st.text_input("Username",key="Username")
-       password = st.text_input("Password",key="Password",type="password")
-       if st.button("Login"):
-           if any(u["Username"] == username and u["Password"] == password for u in users):
-              st.session_state.username = username
-              st.rerun()
-           else:
-               st.error("Wrong password or username")
-   with tabs2:
-       new_username = st.text_input("New username",key=f"Username{st.session_state.reg_counter}")
-       new_password = st.text_input("New password",key=f"Password{st.session_state.reg_counter}",type="password")
-       if st.button("Register"):
-           if len(new_password) < 9 or  not any( char in new_password for char  in string.punctuation):
-               st.error("Password can't be lesser than 9 characters and must contain a special character")
-               time.sleep(2.5)
-               st.rerun()
-           else:
-            if any(u["Username"] == new_username for u in users):
-                st.error("Username already taken")
-            else:
-                supabase.table("Users").insert({"Username" : new_username , "Password" : new_password}).execute()
-                st.success("Account successfully created , go to login page")
-                time.sleep(1.5)
-                st.session_state.reg_counter += 1
-                st.rerun()
-   st.stop()
 
 layout.show_sidebar()
-        
-    
+
 s_username = st.session_state.username
-file_df = supabase.table("Transactions").select("*").eq("Username" ,s_username) .execute().data
-if not file_df:
-    file_df =  {"Date" : ["2000-01-01"],
-         "Item" : [""],
-         "Amount" : [0],
-         "Type" : [""],
-          "Username" : [s_username]}  
-file_df = pd.DataFrame(file_df)
-file_df.columns = [col.capitalize() for col in file_df.columns]
-#if "df" not in st.session_state:
-df = file_df
-st.session_state.df = df
+s_currency = st.session_state.currency
+file_df = fetch_tx(username=s_username)
+if file_df.empty:
+    file_df = lg.default_file("Tx")
+    tx_types = ["Initial balance"]
+    st.markdown("You need to  record an initial balance before making transactions")
+else:
+    tx_types = ["Expense" , "Income" ,"Budget"]
+st.session_state.df = file_df
+st.session_state.df = lg.sort_data(st.session_state.df)
+balance,_,_ = lg.calculate_balance(st.session_state.df)
+balancd_metric = st.metric(label="Balance" ,value=format_amount(balance,0,s_currency), delta="balance",delta_arrow="off")
 
-st.session_state.df["Date"] = pd.to_datetime(st.session_state.df["Date"],format="mixed").dt.date
-st.session_state.df = st.session_state.df.sort_values(by="Date" , ascending=False).reset_index(drop=True)
-initial = st.session_state.df[st.session_state.df["Type"] == "Initial balance"]["Amount"].sum()
-total_income = st.session_state.df[st.session_state.df["Type"] == "Income"]["Amount"].sum()
-total_expense = st.session_state.df[st.session_state.df["Type"] == "Expense"]["Amount"].sum()
-balance = (total_income+initial) - total_expense
-st.metric(label="Balance" ,value=f"₦ {balance:,.2f}", delta="balance",delta_arrow="off")
+#Budget df 
+budget_df = fetch_budget(username=s_username)
+if budget_df.empty:
+    budget_df = lg.default_file("Budget")
+st.session_state.b_df = budget_df
+st.session_state.b_df = lg.sort_data(st.session_state.b_df)
 
-def add_transaction(dates,items,amounts,typess):
-    new_entry = {"Date" : str(dates),
-         "Item" : items,
-         "Amount" : amounts,
-         "Type" : typess,
-         "Username" : s_username,} 
-    supabase.table("Transactions").insert(new_entry).execute()
-    
-tx_types = ["Expense" , "Income" ,"Budget"]
+#Data entry interphase
 if "tx_counter" not in st.session_state:
     st.session_state.tx_counter = 0
-if "Initial balance" not in st.session_state.df["Type"].unique():
-    tx_types.append("Initial balance")
+if "master_date" not in st.session_state:
+    st.session_state.master_date = lg.default_time
 
-date = st.date_input("Date",key="choose_date")
+def date_stepper(step,date_value):
+    if step == "+":
+        st.session_state[date_value] += timedelta(days=1)
+    elif step == "-":
+          st.session_state[date_value] -= timedelta(days=1)
+col_a,col_b,col_c = st.columns([1,2,1],gap="small")
+with col_a:
+    st.button("◀",on_click=date_stepper,args=("-","master_date"))
+with col_b:
+    date = st.date_input("Date",key="master_date",label_visibility="collapsed")
+with col_c:
+    st.button("▶",on_click=date_stepper,args=("+","master_date"))
+item_key = "item_box"
+cate_raw = fetch_categories(s_username)
+cate_data = list(cate_raw.keys())
 types = st.selectbox("Type",tx_types,key="types")
-if types == "Initial balance":
-    item = "Starting balance"
-else:
-    item = st.text_input("Item",key= 0 + st.session_state.tx_counter)
-amount = st.number_input("Amount",step=100.0,key= 1000 + st.session_state.tx_counter)
-
-    
-
+category_data = arrange_category(cate_data,types)
+category = st.selectbox("Categories",category_data,key="categories")
+if category == "Add Category":
+    category = st.text_input("New Category",key="new_category")
+item = my_search_box("Item",item_key,st.session_state.df["Item"],placeholder="Optional")
+amount = st.number_input("Amount",step=100.0,key=f"tx_amount{+ st.session_state.tx_counter}")
+#types,category,item,amount = data_entry(item_key,st.session_state.df["Item"],tx_types,cate_data)
 
 
 if st.button("Add transactions"):
-    if amount > 0 and item:
-        add_transaction(date,item,amount,types)
+    valid_transaction = lg.transaction_logic(date,item,amount,types,category,s_username)
+    if valid_transaction:
         st.success("Added!")
-        #if types == "Initial balance":
-            #item = "Starting balance"
         st.session_state.tx_counter += 1
-        time.sleep(1.5)
+        change_state(item_key,"")
+        time.sleep(0.5)
         st.rerun()
     else:
-        st.warning("Enter an amount and item")
-        time.sleep(2.5)
+        st.warning("Enter an amount")
+        time.sleep(0.5)
         st.rerun()
-        
-if "view_date_value" not in st.session_state:
-    st.session_state.view_date_value = pd.Timestamp.today().date()
 
-select_date = st.date_input(
-    "Select a date", 
-    value=st.session_state.view_date_value,  # ← Use the saved value!
-    key="view_date"
-)
-
-# Update session state whenever the user changes it
-st.session_state.view_date_value = select_date
-daily_table = st.session_state.df[st.session_state.df["Date"] == select_date].drop(columns="Date")
-day_out = daily_table[daily_table["Type"] == "Expense"].reset_index(drop=True)
-day_in = daily_table[daily_table["Type"] == "Income"].reset_index(drop=True)
-budget = daily_table[daily_table["Type"] == "Budget"].reset_index(drop=True)
+select_date = st.session_state.master_date
+daily_table,day_in,day_out = lg.filtered_transaction(select_date,st.session_state.df,types)
 if "editor_switch" not in st.session_state:
     st.session_state.editor_switch = False
-toggle = st.toggle("Edit mode", key="editor_switch")
+toggle = st.toggle("Edit mode", key="editor_switch",disabled=st.session_state.get("budget_toggle",False))
 if not st.session_state.editor_switch:
     col1,col2 = st.columns(2)
     with col1:
-        st.title("Income")
-        st.dataframe(day_in[["Item" , "Amount"]])
+        st.subheader("Income")
+        format_df(day_in[["Category","Amount"]],2,"Amount")
         money_made = day_in["Amount"].sum()
         if money_made > 0:
-            st.success(f"Total money in today is:  ₦{money_made:,.2f} ")
+            st.success(f"Money In: {format_amount(money_made,0,s_currency)} ")
         else:
-            st.write(f"Total money in today is:  ₦{money_made:,.2f} ")
+            st.write(f"Money In: {format_amount(money_made,0,s_currency)} ")
     with col2:
-        st.title("Expense")
-        st.dataframe(day_out[["Item" ,"Amount"]])
+        st.subheader("Expense")
+        format_df(day_out[["Category","Amount"]],2,"Amount")
         money_lost = day_out["Amount"].sum()
         if money_lost > 0:
-            st.error(f"Total money out today is: ₦{money_lost:,.2f} ")
+            st.error(f"Money Out: {format_amount(money_lost,0,s_currency)} ")
         else:
-            st.write(f"Total money out today is: ₦{money_lost:,.2f} ")
+            st.write(f"Money Out: {format_amount(money_lost,0,s_currency)} ")
 elif st.session_state.editor_switch:
-    edited_data = st.session_state.df[st.session_state.df["Date"] == select_date][["Item" ,"Amount" , "Type"]]
-    excluded_data = st.session_state.df[st.session_state.df["Date"] != select_date ][["Item" , "Amount" , "Type"]]
-    final_edited = st.data_editor(edited_data,num_rows="dynamic")
-    if st.button("Save"):
-        final_edited["Date"] = str(select_date)
-        final_edited["Username"] = s_username
-        final_data = pd.concat([final_edited,excluded_data],ignore_index=True)
-        supabase.table("Transactions").delete().eq("Username", s_username).eq("Date" , str(select_date)).execute()
-        edited_rows = final_edited[["Date" ,"Item" ,"Amount" , "Type" , "Username" ]].to_dict(orient="records")
-        supabase.table("Transactions").insert(edited_rows).execute()
-        st.session_state.df = final_data
-        st.success("Saved!")
-        time.sleep(1.5)
-        st.rerun()
-        
-        
+    editor_toggle("Transaction")
 
 
-st.title("Budget")
-st.dataframe(budget[["Item" , "Amount"]])
+b_df = st.session_state.b_df
+b_df["Month"] = pd.to_datetime(b_df["Date"]).dt.to_period("M")  
+b_months = b_df["Month"].unique() 
+if "budget_toggle" not in st.session_state:
+    st.session_state.budget_toggle = False 
+b_toggle = st.toggle("Edit Budget" , key="budget_toggle", disabled=st.session_state.get("editor_switch",False))
+if not st.session_state.budget_toggle:
+    st.subheader("Budget")
+    opt = st.selectbox("Select month" ,b_months, key="budget_months_for_app",format_func=format_date) 
+    month_budget,_,_ = lg.filtered_transaction(opt,b_df,"Budget","Month")
+    st.dataframe(month_budget[["Category" , "Amount"]].style.format(formatter = lambda x : format_amount(x,2,s_currency),subset=["Amount"]))
+elif st.session_state.budget_toggle:
+    editor_toggle("Budget")
 
 
 

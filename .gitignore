@@ -1,0 +1,6 @@
+.streamlit/
+__pychache__/
+*.csv
+*.pyc
+Expense-tracker/__pycache__/layout.cpython-313.pyc
+Expense-tracker/__pycache__/layout.cpython-313.pyc
