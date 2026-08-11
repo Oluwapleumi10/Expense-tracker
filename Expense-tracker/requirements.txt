@@ -3,4 +3,4 @@ pandas
 supabase
 matplotlib
 plotly
-
+st_keyup
