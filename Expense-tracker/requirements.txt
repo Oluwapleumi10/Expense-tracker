@@ -4,4 +4,6 @@ supabase
 matplotlib
 plotly
 streamlit-keyup
-
+streamlit-cookies-controller
+httpx
+bcrypt
