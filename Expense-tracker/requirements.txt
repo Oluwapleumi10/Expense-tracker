@@ -3,4 +3,7 @@ pandas
 supabase
 matplotlib
 plotly
-st_keyup
+streamlit-keyup
+streamlit-cookies-controller
+httpx
+bcrypt
