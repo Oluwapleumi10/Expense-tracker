@@ -25,12 +25,10 @@ if "username" not in st.session_state:
       if saved_cookie:
         st.session_state.username = saved_cookie
     except TypeError:
-        st.write("Error Occured")
-        time.sleep(1)
-        st.session_state.username = None
+        pass
 
 #If no cookie was found ,try again several times incase of browser delay
-if st.session_state.attempt < 5:
+if st.session_state.get("username") == None and st.session_state.attempt < 5:
     with st.spinner("Loading"):
         time.sleep(0.5)
         st.session_state.attempt += 1

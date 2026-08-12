@@ -1,6 +1,8 @@
 from datetime import datetime 
 import streamlit as st
 
+CURRENCY = st.session_state.currency
+
 def simple_date(date,mode):
     if mode == "Week":
         start_format = date.start_time.strftime("%d-%b")
@@ -11,7 +13,6 @@ def simple_date(date,mode):
         return simple
      
 def format_df(data,length,*target_column,need_emoji=False,**kwargs):
-    CURRENCY = st.session_state.currency
     if need_emoji:
         st.dataframe(data.style.format(formatter= lambda x : format_amount(x,length,CURRENCY,True),subset=list(target_column)),**kwargs)
     else:
@@ -19,7 +20,6 @@ def format_df(data,length,*target_column,need_emoji=False,**kwargs):
 
 
 def expander_format(income,expense,balance):
-    CURRENCY = st.session_state.currency
     #Only filter income and expense
     formatted_in = format_amount(income,1,CURRENCY)
     formatted_out = format_amount(expense,1,CURRENCY)
