@@ -25,6 +25,8 @@ if "username" not in st.session_state:
       if saved_cookie:
         st.session_state.username = saved_cookie
     except TypeError:
+        st.write("Error Occured")
+        time.sleep(1)
         st.session_state.username = None
 
 #If no cookie was found ,try again several times incase of browser delay
