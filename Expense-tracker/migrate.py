@@ -63,7 +63,8 @@ if unmapped_items.empty:
     #Remove all the columns that wont be needed to send to supabase
     old_transaction = old_transaction.drop(columns=["Category","Uniform_items","id"])
     st.write(old_transaction)
-    # upload_trans = old_trans.to_dict(orient="records")
-    # supabase.table("Transaction_v2").insert(upload_trans).execute()
+    #upload_trans = old_transaction.to_dict(orient="records")
+    #supabase.table("Transaction_v2").insert(upload_trans).execute()
+
     
 

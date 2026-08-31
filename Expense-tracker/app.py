@@ -38,7 +38,7 @@ st.session_state.b_df = lg.sort_data(st.session_state.b_df)
 if "tx_counter" not in st.session_state:
     st.session_state.tx_counter = 0
 if "master_date" not in st.session_state:
-    st.session_state.master_date = lg.default_time
+    st.session_state.master_date = lg.get_default_time()
 
 def date_stepper(step,date_value):
     if step == "+":
@@ -62,8 +62,6 @@ if category == "Add Category":
     category = st.text_input("New Category",key="new_category")
 item = my_search_box("Item",item_key,st.session_state.df["Item"],placeholder="Optional")
 amount = st.number_input("Amount",step=100.0,key=f"tx_amount{+ st.session_state.tx_counter}")
-#types,category,item,amount = data_entry(item_key,st.session_state.df["Item"],tx_types,cate_data)
-
 
 if st.button("Add transactions"):
     valid_transaction = lg.transaction_logic(date,item,amount,types,category,s_username)
