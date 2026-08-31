@@ -1,16 +1,16 @@
 import pandas as pd 
 import streamlit as st
-from datetime import datetime,timedelta
+from datetime import datetime
 from layout import clean_input
-from api_connect import fetch_categories,add_category,add_transaction,fetch_user
+from api_connect import fetch_categories,add_category,add_transaction
 
 BUDGET = "Budget"
 TRANSACTION = "Transaction_v2"
+CAT_TABLE = "Categories"
 
 
-
-
-default_time = datetime.now().date()
+def get_default_time():
+   return datetime.now().date()
 
 #To get a section of your dataframe
 def get_filter_data(data,by_column,parameter):
@@ -73,7 +73,7 @@ def transaction_logic(date,item,amount,types,category,username):
     if amount > 0:
       if category not in cate_data:
         new_category = {"Category_name" : category,"Username" : username}   
-        category_id = add_category(new_category)
+        category_id = add_category(new_category,CAT_TABLE)
       else:
         category_id = cate_raw[category]
       transaction_data = data_clean(date,item,amount,types,category_id,username=username)
