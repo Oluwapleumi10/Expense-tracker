@@ -86,7 +86,7 @@ if st.session_state.navigation["phase"] == 0:
                     #If citeria was met , hash the users password for security purposes
                     st.session_state.auth["hpass"] = hash_decode(new_password)
                     #Create the users profile on supabase , send the hashed passowrd
-                    create_user(new_username,st.session_state.auth["hpass"])
+                    create_user({"Username" : new_username,"Password" : st.session_state.auth["hpass"]},"Users")
                     st.success("Account created successfully!")
                     st.session_state.navigation["phase"] = 1
                     st.session_state.reg_counter += 1
